@@ -71,9 +71,9 @@ class HashMap:
         idx = start
         while True:
             slot = self._slots[idx]
-            if slot is None or slot is _TOMBSTONE:
+            if slot is None:
                 return None
-            if slot[0] == key:
+            if slot is not _TOMBSTONE and slot[0] == key:
                 return idx
             idx = (idx + 1) % self._capacity
             if idx == start:
@@ -125,6 +125,25 @@ if __name__ == "__main__":
     del table["year"]
     assert "year" not in table
     assert sorted(table.keys()) == ["language", "name"]
+
+    class CollidingKey:
+        def __init__(self, value):
+            self.value = value
+
+        def __hash__(self):
+            return 0
+
+        def __eq__(self, other):
+            return isinstance(other, CollidingKey) and self.value == other.value
+
+    first = CollidingKey("first")
+    second = CollidingKey("second")
+    collisions = HashMap()
+    collisions[first] = "deleted"
+    collisions[second] = "must remain reachable"
+    del collisions[first]
+    assert collisions[second] == "must remain reachable"
+    assert second in collisions
 
     for i in range(30):
         table[f"k{i}"] = i
